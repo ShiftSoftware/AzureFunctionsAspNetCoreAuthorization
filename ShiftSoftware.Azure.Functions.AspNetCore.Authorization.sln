@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShiftSoftware.Azure.Functions.AspNetCore.Authorization", "ShiftSoftware.Azure.Functions.AspNetCore.Authorization\ShiftSoftware.Azure.Functions.AspNetCore.Authorization.csproj", "{EF98C0DC-67E0-4F89-AE32-6F1FBA8748BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF98C0DC-67E0-4F89-AE32-6F1FBA8748BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF98C0DC-67E0-4F89-AE32-6F1FBA8748BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF98C0DC-67E0-4F89-AE32-6F1FBA8748BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF98C0DC-67E0-4F89-AE32-6F1FBA8748BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {62BA73F8-8789-416D-BAD2-0615E326B068}
+	EndGlobalSection
+EndGlobal
