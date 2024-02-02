@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\ShiftFrameworkGlobalSettings.props" Condition="Exists('..\..\ShiftFrameworkGlobalSettings.props')" />
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>0.0.1</Version>
+		<Version>$(AzureFunctionsAspNetCoreAuthorization)</Version>
 		<Authors>ShiftSoftware,nahro</Authors>
 		<RootNamespace>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</RootNamespace>
 		<Product>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</Product>
