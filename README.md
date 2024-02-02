@@ -1,0 +1,1 @@
+# ShiftSoftware.Azure.Functions.AspNetCore.Authorization
