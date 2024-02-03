@@ -2,22 +2,19 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
-using Microsoft.Extensions.DependencyInjection;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Utilities;
-using System.Collections.Generic;
-using System.Dynamic;
 using System.Net;
 using System.Security.Claims;
 
 namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization;
 
-internal class AuthenticationMiddleware : IFunctionsWorkerMiddleware
+internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly TokenService tokenService;
 
-    public AuthenticationMiddleware(TokenService tokenService)
+    public AuthorizationMiddleware(TokenService tokenService)
     {
         this.tokenService = tokenService;
     }

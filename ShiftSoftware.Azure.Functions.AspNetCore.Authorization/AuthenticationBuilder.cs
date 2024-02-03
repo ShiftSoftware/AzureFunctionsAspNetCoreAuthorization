@@ -24,8 +24,8 @@ public class AuthenticationBuilder
     public AuthenticationBuilder AddJwtBearer(string authenticationScheme,
         TokenValidationParameters tokenValidationParameters)
     {
-        builder.UseMiddleware<AuthenticationMiddleware>();
-        builder.Services.AddScoped(x => new AuthenticationOptions(tokenValidationParameters, authenticationScheme));
+        builder.UseMiddleware<AuthorizationMiddleware>();
+        builder.Services.AddScoped(x => new AuthorizationOptions(tokenValidationParameters, authenticationScheme));
         builder.Services.AddScoped<TokenService>();
 
         return this;

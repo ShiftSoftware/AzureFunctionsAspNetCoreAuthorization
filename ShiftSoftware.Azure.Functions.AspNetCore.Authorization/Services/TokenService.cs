@@ -13,9 +13,9 @@ namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
 
 internal class TokenService
 {
-    private readonly IEnumerable<AuthenticationOptions> listAuthenticationOptions;
+    private readonly IEnumerable<AuthorizationOptions> listAuthenticationOptions;
 
-    public TokenService(IEnumerable<AuthenticationOptions> listAuthenticationOptions)
+    public TokenService(IEnumerable<AuthorizationOptions> listAuthenticationOptions)
     {
         this.listAuthenticationOptions = listAuthenticationOptions;
     }
