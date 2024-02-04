@@ -148,7 +148,7 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         //Setup HttpContext
         var httpContext = new DefaultHttpContext();
         httpContext.RequestServices = context.InstanceServices;
-        httpContext.User = claims;
+        httpContext.User = claims ?? new ClaimsPrincipal();
         httpContext.Request.Method = request.Method;
         httpContext.Request.Headers.ToList()
             .AddRange(request.Headers.Select(x => new KeyValuePair<string, StringValues>(x.Key, new StringValues(x.Value.ToArray()))));
