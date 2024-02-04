@@ -19,15 +19,18 @@ namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization;
 internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly TokenService tokenService;
+    private readonly IHttpContextAccessor? httpContextAccessor;
 
-    public AuthorizationMiddleware(TokenService tokenService)
+    public AuthorizationMiddleware(TokenService tokenService, IHttpContextAccessor? httpContextAccessor = null)
     {
         this.tokenService = tokenService;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
     {
         Dictionary<string, ClaimsPrincipal?> shcemeClaims = null;
+        ClaimsPrincipal? claims = null;
 
         //Set user to prevent null reference exception
         context.Items["User"] = new ClaimsPrincipal();
@@ -50,7 +53,6 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         {
             var schemes = ParseSchemes(authorizeAttribute.GetValueOrDefault().attribute?.AuthenticationSchemes);
 
-            ClaimsPrincipal? claims = null;
             if (schemes is not null)
                 claims = shcemeClaims.FirstOrDefault(x => schemes.Contains(x.Key) && x.Value is not null).Value;
             else
@@ -79,22 +81,11 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                 context.Items["User"] = claims!;
                 request?.Identities.ToList().AddRange(claims?.Identities);
 
+                var httpContext = CreateHttpContext(request, context, claims);
+                SetHttpContextToIHttpContextAccessor(httpContext);
+
                 if (authorizeAttribute!.Value.attribute is IAuthorizationFilter authorizationFilter)
                 {
-                    //Setup HttpContext
-                    var httpContext = new DefaultHttpContext();
-                    httpContext.RequestServices = context.InstanceServices;
-                    httpContext.User = claims;
-                    httpContext.Request.Method = request.Method;
-                    httpContext.Request.Headers.ToList()
-                        .AddRange(request.Headers.Select(x=> new KeyValuePair<string, StringValues>(x.Key, new StringValues(x.Value.ToArray()))));
-                    httpContext.Request.Scheme = request.Url.Scheme;
-                    httpContext.Request.Host = new HostString(request.Url.Host, request.Url.Port);
-                    httpContext.Request.QueryString = new QueryString(request.Url.Query);
-                    httpContext.Request.Path = request.Url.AbsolutePath;
-                    httpContext.Items= context.Items;
-                    httpContext.TraceIdentifier = context.TraceContext.TraceParent;
-
                     // Get route parameters from the request
                     var routeParameters = context.BindingContext.BindingData;
 
@@ -142,12 +133,39 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         }
         else
         {
-            var claims = shcemeClaims?.FirstOrDefault(x => x.Value != null).Value;
+            claims = shcemeClaims?.FirstOrDefault(x => x.Value != null).Value;
             context.Items["User"] = claims!;
             request?.Identities.ToList().AddRange(claims?.Identities);
+            var httpContext = CreateHttpContext(request, context, claims);
+            SetHttpContextToIHttpContextAccessor(httpContext);
 
             await next(context);
         }
+    }
+
+    private HttpContext CreateHttpContext(HttpRequestData request, FunctionContext context, ClaimsPrincipal? claims)
+    {
+        //Setup HttpContext
+        var httpContext = new DefaultHttpContext();
+        httpContext.RequestServices = context.InstanceServices;
+        httpContext.User = claims;
+        httpContext.Request.Method = request.Method;
+        httpContext.Request.Headers.ToList()
+            .AddRange(request.Headers.Select(x => new KeyValuePair<string, StringValues>(x.Key, new StringValues(x.Value.ToArray()))));
+        httpContext.Request.Scheme = request.Url.Scheme;
+        httpContext.Request.Host = new HostString(request.Url.Host, request.Url.Port);
+        httpContext.Request.QueryString = new QueryString(request.Url.Query);
+        httpContext.Request.Path = request.Url.AbsolutePath;
+        httpContext.Items = context.Items;
+        httpContext.TraceIdentifier = context.TraceContext.TraceParent;
+
+        return httpContext;
+    }
+
+    private void SetHttpContextToIHttpContextAccessor(HttpContext httpContext)
+    {
+        if (httpContextAccessor is not null)
+            httpContextAccessor.HttpContext = httpContext;
     }
 
     private async Task WriteToReponse(HttpResponseData response,object value, HttpStatusCode statusCode)
