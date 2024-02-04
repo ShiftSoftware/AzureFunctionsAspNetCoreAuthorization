@@ -1,7 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.Primitives;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Utilities;
@@ -37,12 +43,12 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         shcemeClaims = tokenService.ValidateToken(token);
 
         var methodInfo = context.GetTargetFunctionMethod();
-        var authoraizeAttribute = AttributeUtility.GetAttribute<AuthorizeAttribute>(methodInfo);
+        var authorizeAttribute = AttributeUtility.GetAttribute<AuthorizeAttribute>(methodInfo);
         var anonymousAttribute = AttributeUtility.GetAttribute<AllowAnonymousAttribute>(methodInfo);
 
-        if (HasAuthorizeEffect(authoraizeAttribute, anonymousAttribute))
+        if (HasAuthorizeEffect(authorizeAttribute, anonymousAttribute))
         {
-            var schemes = ParseSchemes(authoraizeAttribute.GetValueOrDefault().attribute?.AuthenticationSchemes);
+            var schemes = ParseSchemes(authorizeAttribute.GetValueOrDefault().attribute?.AuthenticationSchemes);
 
             ClaimsPrincipal? claims = null;
             if (schemes is not null)
@@ -58,7 +64,7 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             }
             else
             {
-                var roles = ParseRoles(authoraizeAttribute.GetValueOrDefault().attribute?.Roles);
+                var roles = ParseRoles(authorizeAttribute.GetValueOrDefault().attribute?.Roles);
 
                 if (roles is not null)
                 {
@@ -73,6 +79,58 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                 context.Items["User"] = claims!;
                 request?.Identities.ToList().AddRange(claims?.Identities);
 
+                if (authorizeAttribute!.Value.attribute is IAuthorizationFilter authorizationFilter)
+                {
+                    //Setup HttpContext
+                    var httpContext = new DefaultHttpContext();
+                    httpContext.RequestServices = context.InstanceServices;
+                    httpContext.User = claims;
+                    httpContext.Request.Method = request.Method;
+                    httpContext.Request.Headers.ToList()
+                        .AddRange(request.Headers.Select(x=> new KeyValuePair<string, StringValues>(x.Key, new StringValues(x.Value.ToArray()))));
+                    httpContext.Request.Scheme = request.Url.Scheme;
+                    httpContext.Request.Host = new HostString(request.Url.Host, request.Url.Port);
+                    httpContext.Request.QueryString = new QueryString(request.Url.Query);
+                    httpContext.Request.Path = request.Url.AbsolutePath;
+                    httpContext.Items= context.Items;
+                    httpContext.TraceIdentifier = context.TraceContext.TraceParent;
+
+                    // Get route parameters from the request
+                    var routeParameters = context.BindingContext.BindingData;
+
+                    // Create a new RouteData object
+                    var routeData = new RouteData();
+
+                    // Add route parameters to the RouteData object
+                    foreach (var parameter in routeParameters)
+                    {
+                        if (parameter.Value is string value)
+                        {
+                            routeData.Values[parameter.Key] = value;
+                        }
+                    }
+
+                    var authorizationContext = new AuthorizationFilterContext(new ActionContext(httpContext, routeData, new ActionDescriptor()),
+                        new List<IFilterMetadata> { });
+                    
+                    authorizationFilter.OnAuthorization(authorizationContext);
+
+                    var result = authorizationContext.Result;
+                    if(result is StatusCodeResult statusCodeResult)
+                    {
+                        var response = request?.CreateResponse((HttpStatusCode)statusCodeResult.StatusCode);
+                        context.GetInvocationResult().Value = response;
+                        return;
+                    }
+                    else if (result is ObjectResult objectResult)
+                    {
+                        var response = request?.CreateResponse();
+                        await WriteToReponse(response, objectResult.Value, (HttpStatusCode)objectResult.StatusCode);
+                        context.GetInvocationResult().Value = response;
+                        return;
+                    }
+                }
+
                 await next(context);
             }
         }
@@ -83,6 +141,28 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             request?.Identities.ToList().AddRange(claims?.Identities);
 
             await next(context);
+        }
+    }
+
+    private async Task WriteToReponse(HttpResponseData response,object value, HttpStatusCode statusCode)
+    {
+        if(value is null)
+        {
+            response.StatusCode = statusCode;
+            return;
+        }
+
+        if(value.GetType().IsValueType)
+        {
+            await response.WriteStringAsync(value.ToString());
+            response.StatusCode = statusCode;
+            return;
+        }
+        else
+        {
+            await response.WriteAsJsonAsync(value);
+            response.StatusCode = statusCode;
+            return;
         }
     }
 
