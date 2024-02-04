@@ -122,6 +122,12 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                         context.GetInvocationResult().Value = response;
                         return;
                     }
+                    else if(result is ForbidResult forbidResult)
+                    {
+                        var response = request?.CreateResponse(HttpStatusCode.Forbidden);
+                        context.GetInvocationResult().Value = response;
+                        return;
+                    }
                     else if (result is ObjectResult objectResult)
                     {
                         var response = request?.CreateResponse();
