@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
@@ -20,11 +21,19 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly TokenService tokenService;
     private readonly IHttpContextAccessor? httpContextAccessor;
+    private readonly IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>? authorizationOptions;
+    private readonly IAuthorizationService? authorizationService;
 
-    public AuthorizationMiddleware(TokenService tokenService, IHttpContextAccessor? httpContextAccessor = null)
+    public AuthorizationMiddleware(
+        TokenService tokenService,
+        IHttpContextAccessor? httpContextAccessor = null,
+        IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>? authorizationOptions = null,
+        IAuthorizationService? authorizationService = null)
     {
         this.tokenService = tokenService;
         this.httpContextAccessor = httpContextAccessor;
+        this.authorizationOptions = authorizationOptions;
+        this.authorizationService = authorizationService;
     }
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
@@ -66,8 +75,12 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             }
             else
             {
-                var roles = ParseRoles(authorizeAttribute.GetValueOrDefault().attribute?.Roles);
+                // Set the user to the context
+                context.Items["User"] = claims!;
+                request?.Identities.ToList().AddRange(claims?.Identities);
 
+                // Check if the user is in the required role
+                var roles = ParseRoles(authorizeAttribute.GetValueOrDefault().attribute?.Roles);
                 if (roles is not null)
                 {
                     if (!UserIsInRole(claims, roles))
@@ -78,9 +91,18 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                     }
                 }
 
-                context.Items["User"] = claims!;
-                request?.Identities.ToList().AddRange(claims?.Identities);
-
+                // Check if the user is in the required policy
+                var policies = ParsePolicies(authorizeAttribute.GetValueOrDefault().attribute?.Policy);
+                if (policies is not null)
+                {
+                    if (!UserIsHasPolicy(claims, policies))
+                    {
+                        var response = request?.CreateResponse(HttpStatusCode.Forbidden);
+                        context.GetInvocationResult().Value = response;
+                        return;
+                    }
+                }
+                
                 var httpContext = CreateHttpContext(request, context, claims);
                 SetHttpContextToIHttpContextAccessor(httpContext);
 
@@ -240,7 +262,7 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             return new List<string>() { schemes };
     }
 
-    private IEnumerable<string>? ParseRoles(string roles)
+    private IEnumerable<string>? ParseRoles(string? roles)
     {
         if (roles is null)
             return null;
@@ -251,12 +273,42 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             return new List<string>() { roles };
     }
 
+    private IEnumerable<string>? ParsePolicies(string? policies)
+    {
+        if (policies is null)
+            return null;
+
+        if (policies.Contains(","))
+            return policies.Split(",");
+        else
+            return new List<string>() { policies };
+    }
+
     private bool UserIsInRole(ClaimsPrincipal user, IEnumerable<string> roles)
     {
         foreach (var role in roles)
         {
             if (user.IsInRole(role))
                 return true;
+        }
+
+        return false;
+    }
+
+    private bool UserIsHasPolicy(ClaimsPrincipal user, IEnumerable<string> policies)
+    {
+        if (authorizationOptions is null || authorizationService is null)
+            return false;
+
+        foreach (var policyName in policies)
+        {
+            var policy = authorizationOptions.Value.GetPolicy(policyName);
+            if (policy is not null)
+            {
+                var result = authorizationService.AuthorizeAsync(user, policy);
+                if (result.Result.Succeeded)
+                    return true;
+            }
         }
 
         return false;
