@@ -7,7 +7,7 @@ using ShiftSoftware.Azure.Functions.AspNetCore.Authorization;
 
 namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 
-public static class IFunctionWorkerApplicationBuilderExtension
+public static class IFunctionsWorkerApplicationBuilderExtension
 {
 
     public static AuthenticationBuilder AddAuthentication(this IFunctionsWorkerApplicationBuilder builder)
