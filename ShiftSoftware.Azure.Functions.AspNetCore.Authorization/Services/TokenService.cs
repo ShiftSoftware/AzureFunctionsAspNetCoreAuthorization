@@ -33,7 +33,7 @@ internal class TokenService
                     , out SecurityToken securityToken);
                 JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
 
-                if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512Signature, StringComparison.InvariantCultureIgnoreCase))
+                if (jwtSecurityToken == null || !IsAlgorithmValid(jwtSecurityToken.Header.Alg, authenticationOptions.TokenValidationParameters.ValidAlgorithms))
                     claims.Add(authenticationOptions.AuthenticationScheme ?? "", null);
                 else
                     claims.Add(authenticationOptions.AuthenticationScheme ?? "", principal);
@@ -45,5 +45,13 @@ internal class TokenService
         }
 
         return claims;
+    }
+
+    private bool IsAlgorithmValid(string algorithm, IEnumerable<string>? validAlgorityhms)
+    {
+        if (validAlgorityhms == null)
+            return true;
+
+        return validAlgorityhms.Any(x => x.Equals(algorithm, StringComparison.InvariantCultureIgnoreCase));
     }
 }
