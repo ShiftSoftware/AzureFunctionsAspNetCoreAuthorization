@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Text;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults(x =>
+    .ConfigureFunctionsWebApplication(x =>
     {
         x.AddAuthentication()
         .AddJwtBearer(
@@ -24,7 +24,6 @@ var host = new HostBuilder()
             }
         );
     })
-    .ConfigureFunctionsWebApplication()
     .ConfigureServices(services =>
     {
         services.AddApplicationInsightsTelemetryWorkerService();
