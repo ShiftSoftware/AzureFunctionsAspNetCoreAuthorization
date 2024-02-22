@@ -3,9 +3,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace Tests;
 
-public class AspNetCoreApplication : WebApplicationFactory<API.Sample.Marker>
+public class AspNetCoreApplicationFactory : WebApplicationFactory<API.Sample.Marker>
 {
-    public AspNetCoreApplication()
+    public AspNetCoreApplicationFactory()
     {
 
     }
@@ -22,6 +22,6 @@ public class AspNetCoreApplication : WebApplicationFactory<API.Sample.Marker>
 }
 
 [CollectionDefinition("API Collection")]
-public class APICollection : ICollectionFixture<AspNetCoreApplication>
+public class APICollection : ICollectionFixture<AspNetCoreApplicationFactory>
 {
 }
