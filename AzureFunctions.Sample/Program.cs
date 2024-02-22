@@ -20,7 +20,7 @@ var host = new HostBuilder()
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("A secure key that's shared between AspNetCore and Azure Functions")),
                 ValidateIssuerSigningKey = true,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero,
+                ClockSkew = TimeSpan.Zero
             }
         );
     })

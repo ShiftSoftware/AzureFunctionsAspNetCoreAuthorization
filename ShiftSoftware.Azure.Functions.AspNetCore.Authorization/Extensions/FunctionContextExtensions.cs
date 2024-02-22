@@ -3,14 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 
-internal static class FunctionContextExtensions
+public static class FunctionContextExtensions
 {
-    public static MethodInfo GetTargetFunctionMethod(this FunctionContext context)
+    internal static MethodInfo GetTargetFunctionMethod(this FunctionContext context)
     {
         var entryPoint = context.FunctionDefinition.EntryPoint;
 
@@ -21,5 +22,13 @@ internal static class FunctionContextExtensions
         var methodName = entryPoint.Substring(entryPoint.LastIndexOf('.') + 1);
         var method = type.GetMethod(methodName);
         return method;
+    }
+
+    public static ClaimsPrincipal GetUser(this FunctionContext context)
+    {
+        if (context?.Items["User"] is not null)
+            return context?.Items["User"]! as ClaimsPrincipal;
+        else
+            return new ClaimsPrincipal();
     }
 }

@@ -12,9 +12,6 @@ public static class HttpRequestDataExtensions
 {
     public static ClaimsPrincipal GetUser(this HttpRequestData req)
     {
-        if(req.FunctionContext.Items["User"] is not null)
-            return req.FunctionContext.Items["User"] as ClaimsPrincipal;
-        else
-            return new ClaimsPrincipal();
+        return req.FunctionContext.GetUser();
     }
 }
