@@ -5,7 +5,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>$(AzureFunctionsAspNetCoreAuthorization)</Version>
+		<Version>$(AzureFunctionsAspNetCoreAuthorizationVersion)</Version>
 		<Authors>ShiftSoftware,nahro</Authors>
 		<RootNamespace>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</RootNamespace>
 		<Product>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</Product>
