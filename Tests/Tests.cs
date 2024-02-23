@@ -51,10 +51,23 @@ public class Tests
     [TestPriority(3)]
     public async Task AzureFunctionHello()
     {
-        var azureFunctionPath = Environment.ProcessPath!.Substring(0, Environment.ProcessPath!.IndexOf("Tests\\")) + @"AzureFunctions.Sample\bin\Debug\net8.0";
+        var testDirectory = Directory.GetCurrentDirectory();
+
+        var debugAzureFunctionSampleDirectory = testDirectory.Substring(0, testDirectory.IndexOf("Tests")) + "AzureFunctions.Sample/bin/Debug/net8.0";
+
+        var releaseAzureFunctionSampleDirectory = testDirectory.Substring(0, testDirectory.IndexOf("Tests")) + "AzureFunctions.Sample/bin/Release/net8.0";
+
+        var azureFunctionSampleDirectory = "";
+
+        if (Directory.Exists(releaseAzureFunctionSampleDirectory))
+            azureFunctionSampleDirectory = releaseAzureFunctionSampleDirectory;
+        else
+            azureFunctionSampleDirectory = debugAzureFunctionSampleDirectory;
+
+        this.output.WriteLine(azureFunctionSampleDirectory);
 
         //Wrapped around using. Because the function app stays open and prevents you from building the solution if not dispossed
-        await using (var app = (await TemporaryAzureFunctionsApplication.StartNewAsync(new DirectoryInfo(azureFunctionPath))))
+        await using (var app = (await TemporaryAzureFunctionsApplication.StartNewAsync(new DirectoryInfo(azureFunctionSampleDirectory))))
         {
             var httpClient = new HttpClient();
 
