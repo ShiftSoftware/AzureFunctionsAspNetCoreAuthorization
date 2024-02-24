@@ -86,10 +86,13 @@ app.MapGet("hello", () => "Hello").RequireAuthorization();
 
 app.MapPost("/login", (LoginDTO dto) =>
 {
-    IEnumerable<Claim> claims = new List<Claim>()
-        {
-            new Claim(ClaimTypes.NameIdentifier, dto.Username)
-        };
+    var claims = new List<Claim>()
+    {
+        new Claim(ClaimTypes.NameIdentifier, dto.Username)
+    };
+
+    claims.AddRange(dto.Claims.Select(x => new Claim(x.Key, x.Value)));
+
     var token = new JwtSecurityToken(
         validIssuer,
         validAudience,
@@ -102,7 +105,9 @@ app.MapPost("/login", (LoginDTO dto) =>
             SecurityAlgorithms.HmacSha256
         )
     );
+
     var tokenHandler = new JwtSecurityTokenHandler();
+    
     return tokenHandler.WriteToken(token);
 });
 
@@ -113,4 +118,8 @@ public class LoginDTO
 {
     public string Username { get; set; } = default!;
     public string Password { get; set; } = default!;
+
+    //Claims are not added during a user login
+    //But it's enough for this sample project.
+    public Dictionary<string, string> Claims { get; set; } = default!;
 }

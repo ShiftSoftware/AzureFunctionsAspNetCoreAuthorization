@@ -24,8 +24,13 @@ public class Tests
     {
         var login = new LoginDTO
         {
-            Username = "Test",
-            Password = "Test",
+            Username = "Admin",
+            Password = "Admin",
+            Claims = new()
+            {
+                ["Country"] = "Kurdistan",
+                ["Email"] = "a@a.a",
+            }
         };
 
         var response = await aspNetCoreClient.PostAsync("login", new StringContent(System.Text.Json.JsonSerializer.Serialize(login), Encoding.UTF8, "application/json"));
@@ -64,22 +69,51 @@ public class Tests
         else
             azureFunctionSampleDirectory = debugAzureFunctionSampleDirectory;
 
-        this.output.WriteLine(azureFunctionSampleDirectory);
-
         //Wrapped around using. Because the function app stays open and prevents you from building the solution if not dispossed
         await using (var app = (await TemporaryAzureFunctionsApplication.StartNewAsync(new DirectoryInfo(azureFunctionSampleDirectory))))
         {
             var httpClient = new HttpClient();
 
-            var unauthenticatedResponse = await httpClient.GetAsync("http://localhost:7050/api/hello");
+            var unauthenticatedResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/hello-http-response-data");
 
-            Assert.Equal(401, (int)unauthenticatedResponse.StatusCode);
+            var unauthenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello--iaction-result");
+
+            Assert.Equal(401, (int) unauthenticatedResponse_HttpReponseData.StatusCode);
+
+            Assert.Equal(401, (int) unauthenticatedResponse_IActionResult.StatusCode);
 
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
 
-            var authenticatedResponse = await httpClient.GetAsync("http://localhost:7050/api/hello");
+            var authenticatedResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/hello-http-response-data");
 
-            authenticatedResponse.EnsureSuccessStatusCode();
+            var authenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello--iaction-result");
+
+            authenticatedResponse_HttpReponseData.EnsureSuccessStatusCode();
+            
+            authenticatedResponse_IActionResult.EnsureSuccessStatusCode();
+
+            Assert.Equal("Hello", await authenticatedResponse_HttpReponseData.Content.ReadAsStringAsync());
+
+            Assert.Equal("Hello", await authenticatedResponse_IActionResult.Content.ReadAsStringAsync());
+
+            var claims_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/claims-http-response-data");
+
+            var claims_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/claims--iaction-result");
+
+
+            var claimsDictionary_HttpReponseData = System.Text.Json.Nodes.JsonNode.Parse(await claims_HttpReponseData.Content.ReadAsStringAsync())!
+                .AsObject().ToDictionary(x => x.Key.ToUpper(), x => x.Value!.GetValue<string>());
+
+            var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claims_IActionResult.Content.ReadAsStringAsync())!
+                .AsObject().ToDictionary(x => x.Key.ToUpper(), x => x.Value!.GetValue<string>());
+
+            Assert.Equal("Admin", claimsDictionary_HttpReponseData["NAMEIDENTIFIER"]);
+            Assert.Equal("Kurdistan", claimsDictionary_HttpReponseData["COUNTRY"]);
+            Assert.Equal("a@a.a", claimsDictionary_HttpReponseData["EMAIL"]);
+
+            Assert.Equal("Admin", claimsDictionary_IActionResult["NAMEIDENTIFIER"]);
+            Assert.Equal("Kurdistan", claimsDictionary_IActionResult["COUNTRY"]);
+            Assert.Equal("a@a.a", claimsDictionary_IActionResult["EMAIL"]);
         }
     }
 }

@@ -1,13 +1,7 @@
-﻿using Microsoft.Azure.Functions.Worker;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
+namespace Microsoft.Azure.Functions.Worker;
 
 public static class FunctionContextExtensions
 {

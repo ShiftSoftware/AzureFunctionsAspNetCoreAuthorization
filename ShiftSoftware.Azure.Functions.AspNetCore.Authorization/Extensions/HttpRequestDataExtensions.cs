@@ -1,12 +1,6 @@
-﻿using Microsoft.Azure.Functions.Worker.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 
-namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
+namespace Microsoft.Azure.Functions.Worker.Http;
 
 public static class HttpRequestDataExtensions
 {
