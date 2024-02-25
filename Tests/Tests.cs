@@ -1,4 +1,5 @@
 ﻿
+using System.Security.Claims;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -28,8 +29,8 @@ public class Tests
             Password = "Admin",
             Claims = new()
             {
-                ["Country"] = "Kurdistan",
-                ["Email"] = "a@a.a",
+                [ClaimTypes.Country] = "Kurdistan",
+                [ClaimTypes.Email] = "a@a.a",
             }
         };
 
@@ -101,18 +102,18 @@ public class Tests
             var claims_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/claims--iaction-result");
 
             var claimsDictionary_HttpReponseData = System.Text.Json.Nodes.JsonNode.Parse(await claims_HttpReponseData.Content.ReadAsStringAsync())!
-                .AsObject().ToDictionary(x => x.Key.ToUpper(), x => x.Value!.GetValue<string>());
+                .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
 
             var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claims_IActionResult.Content.ReadAsStringAsync())!
-                .AsObject().ToDictionary(x => x.Key.ToUpper(), x => x.Value!.GetValue<string>());
+                .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
 
-            Assert.Equal("Admin", claimsDictionary_HttpReponseData["NAMEIDENTIFIER"]);
-            Assert.Equal("Kurdistan", claimsDictionary_HttpReponseData["COUNTRY"]);
-            Assert.Equal("a@a.a", claimsDictionary_HttpReponseData["EMAIL"]);
+            Assert.Equal("Admin", claimsDictionary_HttpReponseData[ClaimTypes.NameIdentifier]);
+            Assert.Equal("Kurdistan", claimsDictionary_HttpReponseData[ClaimTypes.Country]);
+            Assert.Equal("a@a.a", claimsDictionary_HttpReponseData[ClaimTypes.Email]);
 
-            Assert.Equal("Admin", claimsDictionary_IActionResult["NAMEIDENTIFIER"]);
-            Assert.Equal("Kurdistan", claimsDictionary_IActionResult["COUNTRY"]);
-            Assert.Equal("a@a.a", claimsDictionary_IActionResult["EMAIL"]);
+            Assert.Equal("Admin", claimsDictionary_IActionResult[ClaimTypes.NameIdentifier]);
+            Assert.Equal("Kurdistan", claimsDictionary_IActionResult[ClaimTypes.Country]);
+            Assert.Equal("a@a.a", claimsDictionary_IActionResult[ClaimTypes.Email]);
 
 
             var usaResident_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/usa-resident-http-response-data");

@@ -31,8 +31,8 @@ var host = new HostBuilder()
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("USA-Resident", policy => policy.RequireClaim("Country", "USA"));
-            options.AddPolicy("Kurdistan-Resident", policy => policy.RequireClaim("Country", "Kurdistan"));
+            options.AddPolicy("USA-Resident", policy => policy.RequireClaim(ClaimTypes.Country, "USA"));
+            options.AddPolicy("Kurdistan-Resident", policy => policy.RequireClaim(ClaimTypes.Country, "Kurdistan"));
         });
     })
     .Build();

@@ -16,11 +16,11 @@ public class Claims
     {
         var user = req.GetUser()!;
 
-        var claims = new
+        var claims = new Dictionary<string, string?>
         {
-            NameIdentifier = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value,
-            Country = user.Claims?.FirstOrDefault(x => x.Type == "Country")?.Value,
-            Email = user.Claims?.FirstOrDefault(x => x.Type == "Email")?.Value,
+            [ClaimTypes.NameIdentifier] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value,
+            [ClaimTypes.Country] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Country)?.Value,
+            [ClaimTypes.Email] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value,
         };
 
         var response = req.CreateResponse(HttpStatusCode.OK);
@@ -36,11 +36,11 @@ public class Claims
     {
         var user = context.GetUser();
 
-        var claims = new
+        var claims = new Dictionary<string, string?>
         {
-            NameIdentifier = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value,
-            Country = user.Claims?.FirstOrDefault(x => x.Type == "Country")?.Value,
-            Email = user.Claims?.FirstOrDefault(x => x.Type == "Email")?.Value,
+            [ClaimTypes.NameIdentifier] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value,
+            [ClaimTypes.Country] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Country)?.Value,
+            [ClaimTypes.Email] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value,
         };
 
         return new OkObjectResult(claims);
