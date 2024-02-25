@@ -155,9 +155,14 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         else
         {
             claims = shcemeClaims?.FirstOrDefault(x => x.Value != null).Value;
+            
             context.Items["User"] = claims!;
-            request?.Identities.ToList().AddRange(claims?.Identities);
+
+            if (claims?.Identities is not null)
+                request?.Identities.ToList().AddRange(claims.Identities);
+
             var httpContext = CreateHttpContext(request, context, claims);
+            
             SetHttpContextToIHttpContextAccessor(httpContext);
 
             await next(context);

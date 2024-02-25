@@ -99,9 +99,28 @@ public class Tests
 
             var unauthenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello-iaction-result");
 
+            var unauthenticatedResponseOnClas_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/authorize-on-class-http-response-data");
+
+            var unauthenticatedResponseOnClass_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/authorize-on-class-iaction-result");
+
+            var unauthenticatedAnonymousResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous-http-response-data");
+
+            var unauthenticatedAnonymousResponseOnClass_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous-iaction-result");
+
             Assert.Equal(401, (int) unauthenticatedResponse_HttpReponseData.StatusCode);
 
             Assert.Equal(401, (int) unauthenticatedResponse_IActionResult.StatusCode);
+
+            Assert.Equal(401, (int) unauthenticatedResponseOnClas_HttpReponseData.StatusCode);
+
+            Assert.Equal(401, (int) unauthenticatedResponseOnClass_IActionResult.StatusCode);
+
+            Assert.Equal(200, (int)unauthenticatedAnonymousResponse_HttpReponseData.StatusCode);
+
+            if (!shouldConfigureFunctionsWorkerDefaults)
+                Assert.Equal(200, (int)unauthenticatedAnonymousResponseOnClass_IActionResult.StatusCode);
+            else
+                Assert.Equal(500, (int)unauthenticatedAnonymousResponseOnClass_IActionResult.StatusCode);
 
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
 
@@ -109,17 +128,41 @@ public class Tests
 
             var authenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello-iaction-result");
 
+            var authenticatedResponseOnClass_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/authorize-on-class-http-response-data");
+
+            var authenticatedResponseOnClass_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/authorize-on-class-iaction-result");
+
+            var authenticatedAnonymousResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous-http-response-data");
+
+            var authenticatedAnonymousResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous-iaction-result");
+
             authenticatedResponse_HttpReponseData.EnsureSuccessStatusCode();
+            authenticatedResponseOnClass_HttpReponseData.EnsureSuccessStatusCode();
+            authenticatedAnonymousResponse_HttpReponseData.EnsureSuccessStatusCode();
 
             if (!shouldConfigureFunctionsWorkerDefaults)
+            {
                 authenticatedResponse_IActionResult.EnsureSuccessStatusCode();
+                authenticatedResponseOnClass_IActionResult.EnsureSuccessStatusCode();
+                authenticatedAnonymousResponse_IActionResult.EnsureSuccessStatusCode();
+            }
             else
+            {
                 Assert.Equal(500, (int)authenticatedResponse_IActionResult.StatusCode);
+                Assert.Equal(500, (int)authenticatedResponseOnClass_IActionResult.StatusCode);
+                Assert.Equal(500, (int)authenticatedAnonymousResponse_IActionResult.StatusCode);
+            }
 
             Assert.Equal("Hello", await authenticatedResponse_HttpReponseData.Content.ReadAsStringAsync());
+            Assert.Equal("Hello", await authenticatedResponseOnClass_HttpReponseData.Content.ReadAsStringAsync());
+            Assert.Equal("Hello", await authenticatedAnonymousResponse_HttpReponseData.Content.ReadAsStringAsync());
 
             if (!shouldConfigureFunctionsWorkerDefaults)
+            {
                 Assert.Equal("Hello", await authenticatedResponse_IActionResult.Content.ReadAsStringAsync());
+                Assert.Equal("Hello", await authenticatedResponseOnClass_IActionResult.Content.ReadAsStringAsync());
+                Assert.Equal("Hello", await authenticatedAnonymousResponse_IActionResult.Content.ReadAsStringAsync());
+            }
 
             var claims_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/claims-http-response-data");
 
