@@ -31,8 +31,7 @@ if (shouldConfigureFunctionsWorkerDefaults)
         {
             x.AddAuthentication()
             .AddJwtBearer(tokenValidationParameters);
-        })
-        .ConfigureFunctionsWebApplication();
+        });
 }
 else
 {

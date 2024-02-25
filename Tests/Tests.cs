@@ -97,7 +97,7 @@ public class Tests
 
             var unauthenticatedResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/hello-http-response-data");
 
-            var unauthenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello--iaction-result");
+            var unauthenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello-iaction-result");
 
             Assert.Equal(401, (int) unauthenticatedResponse_HttpReponseData.StatusCode);
 
@@ -107,33 +107,40 @@ public class Tests
 
             var authenticatedResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/hello-http-response-data");
 
-            var authenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello--iaction-result");
+            var authenticatedResponse_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/hello-iaction-result");
 
             authenticatedResponse_HttpReponseData.EnsureSuccessStatusCode();
-            
-            authenticatedResponse_IActionResult.EnsureSuccessStatusCode();
+
+            if (!shouldConfigureFunctionsWorkerDefaults)
+                authenticatedResponse_IActionResult.EnsureSuccessStatusCode();
+            else
+                Assert.Equal(500, (int)authenticatedResponse_IActionResult.StatusCode);
 
             Assert.Equal("Hello", await authenticatedResponse_HttpReponseData.Content.ReadAsStringAsync());
 
-            Assert.Equal("Hello", await authenticatedResponse_IActionResult.Content.ReadAsStringAsync());
+            if (!shouldConfigureFunctionsWorkerDefaults)
+                Assert.Equal("Hello", await authenticatedResponse_IActionResult.Content.ReadAsStringAsync());
 
             var claims_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/claims-http-response-data");
 
-            var claims_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/claims--iaction-result");
+            var claims_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/claims-iaction-result");
 
             var claimsDictionary_HttpReponseData = System.Text.Json.Nodes.JsonNode.Parse(await claims_HttpReponseData.Content.ReadAsStringAsync())!
-                .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
-
-            var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claims_IActionResult.Content.ReadAsStringAsync())!
                 .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
 
             Assert.Equal("Admin", claimsDictionary_HttpReponseData[ClaimTypes.NameIdentifier]);
             Assert.Equal("Kurdistan", claimsDictionary_HttpReponseData[ClaimTypes.Country]);
             Assert.Equal("a@a.a", claimsDictionary_HttpReponseData[ClaimTypes.Email]);
 
-            Assert.Equal("Admin", claimsDictionary_IActionResult[ClaimTypes.NameIdentifier]);
-            Assert.Equal("Kurdistan", claimsDictionary_IActionResult[ClaimTypes.Country]);
-            Assert.Equal("a@a.a", claimsDictionary_IActionResult[ClaimTypes.Email]);
+            if (!shouldConfigureFunctionsWorkerDefaults)
+            {
+                var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claims_IActionResult.Content.ReadAsStringAsync())!
+                    .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
+
+                Assert.Equal("Admin", claimsDictionary_IActionResult[ClaimTypes.NameIdentifier]);
+                Assert.Equal("Kurdistan", claimsDictionary_IActionResult[ClaimTypes.Country]);
+                Assert.Equal("a@a.a", claimsDictionary_IActionResult[ClaimTypes.Email]);
+            }
 
 
             var usaResident_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/usa-resident-http-response-data");
@@ -150,7 +157,10 @@ public class Tests
 
             Assert.Equal(200, (int)kurdistan_HttpReponseData.StatusCode);
 
-            Assert.Equal(200, (int)kurdistan_IActionResult.StatusCode);
+            if (!shouldConfigureFunctionsWorkerDefaults)
+                Assert.Equal(200, (int)kurdistan_IActionResult.StatusCode);
+            else
+                Assert.Equal(500, (int)kurdistan_IActionResult.StatusCode);
         }
     }
 }

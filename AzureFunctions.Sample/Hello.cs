@@ -20,7 +20,7 @@ public class Hello
         return response;
     }
 
-    [Function("hello--iaction-result")]
+    [Function("hello-iaction-result")]
     [Authorize]
     public IActionResult SayHello2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
     {

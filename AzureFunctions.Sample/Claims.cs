@@ -30,7 +30,7 @@ public class Claims
         return response;
     }
 
-    [Function("claims--iaction-result")]
+    [Function("claims-iaction-result")]
     [Authorize]
     public IActionResult GetClaims2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
     {
