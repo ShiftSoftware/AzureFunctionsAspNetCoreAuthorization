@@ -12,7 +12,7 @@ public class Policies
 {
     [Function("usa-resident-http-response-data")]
     [Authorize(Policy = "USA-Resident")]
-    public HttpResponseData UsaResident1([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequestData req)
+    public HttpResponseData UsaResident1([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
 
@@ -21,14 +21,14 @@ public class Policies
 
     [Function("usa-resident-iaction-result")]
     [Authorize(Policy = "USA-Resident")]
-    public IActionResult UsaResident2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
+    public IActionResult UsaResident2([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext context)
     {
         return new OkResult();
     }
 
     [Function("kurdistan-resident-http-response-data")]
     [Authorize(Policy = "Kurdistan-Resident")]
-    public HttpResponseData KurdistanResident1([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequestData req)
+    public HttpResponseData KurdistanResident1([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
 
@@ -37,7 +37,7 @@ public class Policies
 
     [Function("kurdistan-resident-iaction-result")]
     [Authorize(Policy = "Kurdistan-Resident")]
-    public IActionResult KurdistanResident2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
+    public IActionResult KurdistanResident2([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext context)
     {
         return new OkResult();
     }

@@ -12,7 +12,7 @@ public class Claims
 {
     [Function("claims-http-response-data")]
     [Authorize]
-    public async Task<HttpResponseData> GetClaims([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequestData req)
+    public async Task<HttpResponseData> GetClaims([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
     {
         var user = req.GetUser()!;
 
@@ -32,7 +32,7 @@ public class Claims
 
     [Function("claims-iaction-result")]
     [Authorize]
-    public IActionResult GetClaims2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
+    public IActionResult GetClaims2([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext context)
     {
         var user = context.GetUser();
 
