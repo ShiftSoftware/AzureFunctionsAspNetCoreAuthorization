@@ -52,10 +52,22 @@ public class Tests
         response.EnsureSuccessStatusCode();
     }
 
-    //https://www.codit.eu/blog/locally-integration-testing-azure-functions-applications/?country_sel=be
-    [Fact(DisplayName = "03. Use the Token to call an Azure Function Endpoint.")]
+    [Fact(DisplayName = "03. Use the Token With Functions Registered by ConfigureFunctionsWebApplication()")]
     [TestPriority(3)]
-    public async Task AzureFunctionHello()
+    public async Task TestFunctionsWithConfigureFunctionsWebApplication()
+    {
+        await this.AzureFunctionTests(false);
+    }
+
+    [Fact(DisplayName = "04. Use the Token With Functions Registered by ConfigureFunctionsWorkerDefaults()")]
+    [TestPriority(4)]
+    public async Task TestFunctionsWithConfigureFunctionsWorkerDefaults()
+    {
+        await this.AzureFunctionTests(true);
+    }
+
+    //https://www.codit.eu/blog/locally-integration-testing-azure-functions-applications/?country_sel=be
+    private async Task AzureFunctionTests(bool shouldConfigureFunctionsWorkerDefaults)
     {
         var testDirectory = Directory.GetCurrentDirectory();
 
@@ -69,6 +81,14 @@ public class Tests
             azureFunctionSampleDirectory = releaseAzureFunctionSampleDirectory;
         else
             azureFunctionSampleDirectory = debugAzureFunctionSampleDirectory;
+
+        var tempFilePath = $"{azureFunctionSampleDirectory}/shouldConfigureFunctionsWorkerDefaults";
+
+        if (File.Exists(tempFilePath))
+            File.Delete(tempFilePath);
+
+        if (shouldConfigureFunctionsWorkerDefaults)
+            await File.Create(tempFilePath).DisposeAsync();
 
         //Wrapped around using. Because the function app stays open and prevents you from building the solution if not dispossed
         await using (var app = (await TemporaryAzureFunctionsApplication.StartNewAsync(new DirectoryInfo(azureFunctionSampleDirectory))))
