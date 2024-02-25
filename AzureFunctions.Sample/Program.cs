@@ -10,41 +10,25 @@ var shouldConfigureFunctionsWorkerDefaults = Directory
     .GetFiles(Directory.GetCurrentDirectory())
     .Contains($"{Directory.GetCurrentDirectory()}\\shouldConfigureFunctionsWorkerDefaults");
 
-var tokenValidationParameters = new TokenValidationParameters
-{
-    ValidateAudience = false,
-    ValidateIssuer = true,
-    ValidIssuer = "Issuer",
-    RequireExpirationTime = true,
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("A secure key that's shared between AspNetCore and Azure Functions")),
-    ValidateIssuerSigningKey = true,
-    ValidateLifetime = true,
-    ClockSkew = TimeSpan.Zero
-};
-
-IHostBuilder hostBuilder = new HostBuilder();
-
 if (shouldConfigureFunctionsWorkerDefaults)
 {
-    hostBuilder = hostBuilder
+    var host = new HostBuilder()
         .ConfigureFunctionsWorkerDefaults(x =>
         {
             x.AddAuthentication()
-            .AddJwtBearer(tokenValidationParameters);
-        });
-}
-else
-{
-    hostBuilder = hostBuilder
-        .ConfigureFunctionsWebApplication(x =>
-        {
-            x.AddAuthentication()
-            .AddJwtBearer(tokenValidationParameters);
-        });
-}
-
-var host = hostBuilder.
-    ConfigureServices(services =>
+            .AddJwtBearer(new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = true,
+                ValidIssuer = "Issuer",
+                RequireExpirationTime = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("A secure key that's shared between AspNetCore and Azure Functions")),
+                ValidateIssuerSigningKey = true,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            });
+        })
+        .ConfigureServices(services =>
         {
             services.AddApplicationInsightsTelemetryWorkerService();
             services.ConfigureFunctionsApplicationInsights();
@@ -57,4 +41,38 @@ var host = hostBuilder.
         })
     .Build();
 
-host.Run();
+    host.Run();
+}
+else
+{
+    var host = new HostBuilder()
+        .ConfigureFunctionsWebApplication(x =>
+        {
+            x.AddAuthentication()
+            .AddJwtBearer(new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = true,
+                ValidIssuer = "Issuer",
+                RequireExpirationTime = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("A secure key that's shared between AspNetCore and Azure Functions")),
+                ValidateIssuerSigningKey = true,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            });
+        })
+        .ConfigureServices(services =>
+        {
+            services.AddApplicationInsightsTelemetryWorkerService();
+            services.ConfigureFunctionsApplicationInsights();
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("USA-Resident", policy => policy.RequireClaim(ClaimTypes.Country, "USA"));
+                options.AddPolicy("Kurdistan-Resident", policy => policy.RequireClaim(ClaimTypes.Country, "Kurdistan"));
+            });
+        })
+    .Build();
+
+    host.Run();
+}
