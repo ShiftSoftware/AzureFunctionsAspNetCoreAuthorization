@@ -100,7 +100,6 @@ public class Tests
 
             var claims_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/claims--iaction-result");
 
-
             var claimsDictionary_HttpReponseData = System.Text.Json.Nodes.JsonNode.Parse(await claims_HttpReponseData.Content.ReadAsStringAsync())!
                 .AsObject().ToDictionary(x => x.Key.ToUpper(), x => x.Value!.GetValue<string>());
 
@@ -114,6 +113,23 @@ public class Tests
             Assert.Equal("Admin", claimsDictionary_IActionResult["NAMEIDENTIFIER"]);
             Assert.Equal("Kurdistan", claimsDictionary_IActionResult["COUNTRY"]);
             Assert.Equal("a@a.a", claimsDictionary_IActionResult["EMAIL"]);
+
+
+            var usaResident_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/usa-resident-http-response-data");
+
+            var usaResident_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/usa-resident-iaction-result");
+
+            Assert.Equal(403, (int) usaResident_HttpReponseData.StatusCode);
+
+            Assert.Equal(403, (int) usaResident_IActionResult.StatusCode);
+
+            var kurdistan_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/kurdistan-resident-http-response-data");
+
+            var kurdistan_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/kurdistan-resident-iaction-result");
+
+            Assert.Equal(200, (int)kurdistan_HttpReponseData.StatusCode);
+
+            Assert.Equal(200, (int)kurdistan_IActionResult.StatusCode);
         }
     }
 }
