@@ -21,7 +21,7 @@ public static class FunctionContextExtensions
     public static ClaimsPrincipal GetUser(this FunctionContext context)
     {
         if (context?.Items["User"] is not null)
-            return context?.Items["User"]! as ClaimsPrincipal;
+            return (context?.Items["User"]! as ClaimsPrincipal)!;
         else
             return new ClaimsPrincipal();
     }

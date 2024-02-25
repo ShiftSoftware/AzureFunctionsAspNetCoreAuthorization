@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
-using ShiftSoftware.Azure.Functions.AspNetCore.Authorization;
+﻿using Microsoft.Azure.Functions.Worker;
 
 namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 

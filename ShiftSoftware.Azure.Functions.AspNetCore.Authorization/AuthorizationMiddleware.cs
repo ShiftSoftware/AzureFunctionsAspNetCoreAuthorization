@@ -9,7 +9,6 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Extensions;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Utilities;
 using System.Net;
