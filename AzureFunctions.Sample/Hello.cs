@@ -11,7 +11,7 @@ public class Hello
 {
     [Function("hello-http-response-data")]
     [Authorize]
-    public async Task<HttpResponseData> RunHello([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequestData req)
+    public async Task<HttpResponseData> SayHello([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequestData req)
     {
         var response = req.CreateResponse(HttpStatusCode.OK);
 
@@ -22,7 +22,7 @@ public class Hello
 
     [Function("hello--iaction-result")]
     [Authorize]
-    public IActionResult RunHello2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
+    public IActionResult SayHello2([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, FunctionContext context)
     {
         return new OkObjectResult("Hello");
     }
