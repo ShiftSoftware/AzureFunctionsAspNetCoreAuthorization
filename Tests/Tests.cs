@@ -93,6 +93,9 @@ public class Tests
         //Wrapped around using. Because the function app stays open and prevents you from building the solution if not dispossed
         await using (var app = (await TemporaryAzureFunctionsApplication.StartNewAsync(new DirectoryInfo(azureFunctionSampleDirectory))))
         {
+            if (File.Exists(tempFilePath))
+                File.Delete(tempFilePath);
+
             var httpClient = new HttpClient();
 
             var unauthenticatedResponse_HttpReponseData = await httpClient.GetAsync("http://localhost:7050/api/hello-http-response-data");
