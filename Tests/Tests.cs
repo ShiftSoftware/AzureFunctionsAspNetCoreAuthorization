@@ -120,10 +120,10 @@ public class Tests
 
             Assert.Equal(200, (int)unauthenticatedAnonymousResponse_HttpReponseData.StatusCode);
 
-            if (!shouldConfigureFunctionsWorkerDefaults)
+            //if (!shouldConfigureFunctionsWorkerDefaults)
                 Assert.Equal(200, (int)unauthenticatedAnonymousResponseOnClass_IActionResult.StatusCode);
-            else
-                Assert.Equal(500, (int)unauthenticatedAnonymousResponseOnClass_IActionResult.StatusCode);
+            //else
+            //    Assert.Equal(500, (int)unauthenticatedAnonymousResponseOnClass_IActionResult.StatusCode);
 
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
 
@@ -143,24 +143,24 @@ public class Tests
             authenticatedResponseOnClass_HttpReponseData.EnsureSuccessStatusCode();
             authenticatedAnonymousResponse_HttpReponseData.EnsureSuccessStatusCode();
 
-            if (!shouldConfigureFunctionsWorkerDefaults)
+            //if (!shouldConfigureFunctionsWorkerDefaults)
             {
                 authenticatedResponse_IActionResult.EnsureSuccessStatusCode();
                 authenticatedResponseOnClass_IActionResult.EnsureSuccessStatusCode();
                 authenticatedAnonymousResponse_IActionResult.EnsureSuccessStatusCode();
             }
-            else
-            {
-                Assert.Equal(500, (int)authenticatedResponse_IActionResult.StatusCode);
-                Assert.Equal(500, (int)authenticatedResponseOnClass_IActionResult.StatusCode);
-                Assert.Equal(500, (int)authenticatedAnonymousResponse_IActionResult.StatusCode);
-            }
+            //else
+            //{
+            //    Assert.Equal(500, (int)authenticatedResponse_IActionResult.StatusCode);
+            //    Assert.Equal(500, (int)authenticatedResponseOnClass_IActionResult.StatusCode);
+            //    Assert.Equal(500, (int)authenticatedAnonymousResponse_IActionResult.StatusCode);
+            //}
 
             Assert.Equal("Hello", await authenticatedResponse_HttpReponseData.Content.ReadAsStringAsync());
             Assert.Equal("Hello", await authenticatedResponseOnClass_HttpReponseData.Content.ReadAsStringAsync());
             Assert.Equal("Hello", await authenticatedAnonymousResponse_HttpReponseData.Content.ReadAsStringAsync());
 
-            if (!shouldConfigureFunctionsWorkerDefaults)
+            //if (!shouldConfigureFunctionsWorkerDefaults)
             {
                 Assert.Equal("Hello", await authenticatedResponse_IActionResult.Content.ReadAsStringAsync());
                 Assert.Equal("Hello", await authenticatedResponseOnClass_IActionResult.Content.ReadAsStringAsync());
@@ -178,7 +178,7 @@ public class Tests
             Assert.Equal("Kurdistan", claimsDictionary_HttpReponseData[ClaimTypes.Country]);
             Assert.Equal("a@a.a", claimsDictionary_HttpReponseData[ClaimTypes.Email]);
 
-            if (!shouldConfigureFunctionsWorkerDefaults)
+            //if (!shouldConfigureFunctionsWorkerDefaults)
             {
                 var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claims_IActionResult.Content.ReadAsStringAsync())!
                     .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
@@ -203,10 +203,10 @@ public class Tests
 
             Assert.Equal(200, (int)kurdistan_HttpReponseData.StatusCode);
 
-            if (!shouldConfigureFunctionsWorkerDefaults)
+            //if (!shouldConfigureFunctionsWorkerDefaults)
                 Assert.Equal(200, (int)kurdistan_IActionResult.StatusCode);
-            else
-                Assert.Equal(500, (int)kurdistan_IActionResult.StatusCode);
+            //else
+            //    Assert.Equal(500, (int)kurdistan_IActionResult.StatusCode);
         }
     }
 }
