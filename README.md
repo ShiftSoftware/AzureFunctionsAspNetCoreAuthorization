@@ -9,8 +9,9 @@ Users holding a valid Jwt Bearer token that's issued on an AspNetCore app can ca
 Install the [`ShiftSoftware.Azure.Functions.AspNetCore.Authorization`](https://www.nuget.org/packages/ShiftSoftware.Azure.Functions.AspNetCore.Authorization) package
 
 ## Registration (Program.cs)
-The ``AddAuthentication`` and ``AddJwtBearer`` can be used which should be familiar to AspNetCore developers.
-In addition to these. using the Policies can be added using ``AddAuthorization``
+The ``AddAuthentication`` and ``AddJwtBearer`` can be used which should be familiar to AspNetCore developers.  
+
+In addition to these, Policies can be added using ``AddAuthorization``
 
 ```C#
     var host = new HostBuilder()
@@ -51,7 +52,7 @@ We're not supporting the `built-in model` which is activated using **`ConfigureF
 
 More information about HttpTrigger models is available in [this Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-functions/dotnet-isolated-process-guide?tabs=windows#http-trigger) articel.
 
-## Using [Authorize] on AzureFunction Class and AzureFunction Mehotds 
+## Using [Authorize] on Functions 
 After registering the Middleware, the **`[Authorize]`** works in a similar manner as it does in AspNetCore applications. Providing that you use **``AuthorizationLevel.Anonymous``** on the HttpTrigger attribute.
 
 ```C#
