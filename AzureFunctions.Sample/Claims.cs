@@ -3,36 +3,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using System.Net;
 using System.Security.Claims;
 
 namespace AzureFunctions.Sample;
 
 public class Claims
 {
-    [Function("claims-http-response-data")]
+    [Function("claims")]
     [Authorize]
-    public async Task<HttpResponseData> GetClaims([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
-    {
-        var user = req.GetUser()!;
-
-        var claims = new Dictionary<string, string?>
-        {
-            [ClaimTypes.NameIdentifier] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value,
-            [ClaimTypes.Country] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Country)?.Value,
-            [ClaimTypes.Email] = user.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value,
-        };
-
-        var response = req.CreateResponse(HttpStatusCode.OK);
-
-        await response.WriteAsJsonAsync(claims);
-
-        return response;
-    }
-
-    [Function("claims-iaction-result")]
-    [Authorize]
-    public IActionResult GetClaims2([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext context)
+    public IActionResult GetClaims([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req, FunctionContext context)
     {
         var user = context.GetUser();
 

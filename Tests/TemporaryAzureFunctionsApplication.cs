@@ -27,7 +27,7 @@ public class TemporaryAzureFunctionsApplication : IAsyncDisposable
 
     private static Process StartApplication(int port, DirectoryInfo projectDirectory)
     {
-        var appInfo = new ProcessStartInfo("func", $"start --port {port}")
+        var appInfo = new ProcessStartInfo("func", $"start --port {port} --enableAuth")
         {
             UseShellExecute = false,
             CreateNoWindow = true,
