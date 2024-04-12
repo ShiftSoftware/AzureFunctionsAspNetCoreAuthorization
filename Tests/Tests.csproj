@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\API.Sample\API.Sample.csproj" />
+    <ProjectReference Include="..\AzureFunctions.Sample\AzureFunctions.Sample.csproj" />
   </ItemGroup>
 
 </Project>
