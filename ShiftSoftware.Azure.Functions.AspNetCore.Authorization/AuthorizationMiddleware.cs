@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Azure.Functions.Worker;
@@ -37,16 +39,20 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
     {
+        var httpContext = context.GetHttpContext()!;
+
+        if (httpContextAccessor is not null)
+            httpContextAccessor.HttpContext = httpContext;
+
         Dictionary<string, ClaimsPrincipal?> shcemeClaims = null;
         ClaimsPrincipal? claims = null;
 
         //Set user to prevent null reference exception
         context.Items["User"] = new ClaimsPrincipal();
 
-        var request = await context.GetHttpRequestDataAsync();
-        var authorizationHeader = request?.Headers?.FirstOrDefault(x => x.Key.ToLower() == "Authorization".ToLower());
-        var authorizationHeaderValue = authorizationHeader.GetValueOrDefault().Key is not null ?
-            authorizationHeader!.Value.Value.FirstOrDefault() : null;
+        var request = httpContext.Request;
+        var authorizationHeader = request?.Headers?.Authorization;
+        var authorizationHeaderValue = authorizationHeader.GetValueOrDefault().FirstOrDefault();
 
         // Get the token from the request header
         var token = authorizationHeaderValue?.Replace("Bearer ", "");
@@ -68,24 +74,29 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 
             if (claims is null)
             {
-                var response = request?.CreateResponse(HttpStatusCode.Unauthorized);
-                context.GetInvocationResult().Value = response;
+                await new UnauthorizedResult().ExecuteResultAsync(new ActionContext
+                {
+                    HttpContext = httpContext
+                });
                 return;
             }
             else
             {
                 // Set the user to the context
                 context.Items["User"] = claims!;
-                request?.Identities.ToList().AddRange(claims?.Identities);
-
+                httpContext.User = claims!;
+                httpContext.Items["User"] = claims!;
+                
                 // Check if the user is in the required role
                 var roles = ParseRoles(authorizeAttribute.GetValueOrDefault().attribute?.Roles);
                 if (roles is not null)
                 {
                     if (!UserIsInRole(claims, roles))
                     {
-                        var response = request?.CreateResponse(HttpStatusCode.Forbidden);
-                        context.GetInvocationResult().Value = response;
+                        await new ForbidResult().ExecuteResultAsync(new ActionContext
+                        {
+                            HttpContext = httpContext
+                        });
                         return;
                     }
                 }
@@ -96,55 +107,48 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                 {
                     if (!UserIsHasPolicy(claims, policies))
                     {
-                        var response = request?.CreateResponse(HttpStatusCode.Forbidden);
-                        context.GetInvocationResult().Value = response;
+                        await new StatusCodeResult(StatusCodes.Status403Forbidden).ExecuteResultAsync(new ActionContext
+                        {
+                            HttpContext = httpContext
+                        });
                         return;
                     }
                 }
-                
-                var httpContext = CreateHttpContext(request, context, claims);
-                SetHttpContextToIHttpContextAccessor(httpContext);
 
                 if (authorizeAttribute!.Value.attribute is IAuthorizationFilter authorizationFilter)
                 {
-                    // Get route parameters from the request
-                    var routeParameters = context.BindingContext.BindingData;
-
                     // Create a new RouteData object
-                    var routeData = new RouteData();
+                    var routeData = httpContext.GetRouteData();
 
-                    // Add route parameters to the RouteData object
-                    foreach (var parameter in routeParameters)
-                    {
-                        if (parameter.Value is string value)
-                        {
-                            routeData.Values[parameter.Key] = value;
-                        }
-                    }
+                    //Get action descriptor and filters
+                    var endpoint = httpContext.GetEndpoint();
+                    var actionDescriptor = endpoint?.Metadata.GetMetadata<ControllerActionDescriptor>();
+                    var filters = endpoint?.Metadata.GetMetadata<IEnumerable<IFilterMetadata>>();
 
-                    var authorizationContext = new AuthorizationFilterContext(new ActionContext(httpContext, routeData, new ActionDescriptor()),
-                        new List<IFilterMetadata> { });
+                    var authorizationContext = new AuthorizationFilterContext(new ActionContext(httpContext, routeData,
+                        actionDescriptor ?? new ActionDescriptor()), filters?.ToList() ?? new List<IFilterMetadata> { });
                     
                     authorizationFilter.OnAuthorization(authorizationContext);
-
                     var result = authorizationContext.Result;
-                    if(result is StatusCodeResult statusCodeResult)
+                    
+                    if (result is ForbidResult forbidResult)
                     {
-                        var response = request?.CreateResponse((HttpStatusCode)statusCodeResult.StatusCode);
-                        context.GetInvocationResult().Value = response;
+                        await new StatusCodeResult(StatusCodes.Status403Forbidden).ExecuteResultAsync(new ActionContext
+                        {
+                            HttpContext = httpContext
+                        });
                         return;
                     }
-                    else if(result is ForbidResult forbidResult)
+                    else
                     {
-                        var response = request?.CreateResponse(HttpStatusCode.Forbidden);
-                        context.GetInvocationResult().Value = response;
-                        return;
-                    }
-                    else if (result is ObjectResult objectResult)
-                    {
-                        var response = request?.CreateResponse();
-                        await WriteToReponse(response, objectResult.Value, (HttpStatusCode)objectResult.StatusCode);
-                        context.GetInvocationResult().Value = response;
+                        var objrctResult = result as ObjectResult;
+                        var statusCodeResult = result as StatusCodeResult;
+
+                        await new ObjectResult(objrctResult?.Value) { StatusCode = objrctResult?.StatusCode ?? statusCodeResult?.StatusCode }
+                        .ExecuteResultAsync(new ActionContext
+                        {
+                            HttpContext = httpContext,
+                        });
                         return;
                     }
                 }
@@ -157,41 +161,11 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             claims = shcemeClaims?.FirstOrDefault(x => x.Value != null).Value;
             
             context.Items["User"] = claims!;
-
-            if (claims?.Identities is not null)
-                request?.Identities.ToList().AddRange(claims.Identities);
-
-            var httpContext = CreateHttpContext(request, context, claims);
-            
-            SetHttpContextToIHttpContextAccessor(httpContext);
+            httpContext.User = claims!;
+            httpContext.Items["User"] = claims!;
 
             await next(context);
         }
-    }
-
-    private HttpContext CreateHttpContext(HttpRequestData request, FunctionContext context, ClaimsPrincipal? claims)
-    {
-        //Setup HttpContext
-        var httpContext = new DefaultHttpContext();
-        httpContext.RequestServices = context.InstanceServices;
-        httpContext.User = claims ?? new ClaimsPrincipal();
-        httpContext.Request.Method = request.Method;
-        httpContext.Request.Headers.ToList()
-            .AddRange(request.Headers.Select(x => new KeyValuePair<string, StringValues>(x.Key, new StringValues(x.Value.ToArray()))));
-        httpContext.Request.Scheme = request.Url.Scheme;
-        httpContext.Request.Host = new HostString(request.Url.Host, request.Url.Port);
-        httpContext.Request.QueryString = new QueryString(request.Url.Query);
-        httpContext.Request.Path = request.Url.AbsolutePath;
-        httpContext.Items = context.Items;
-        httpContext.TraceIdentifier = context.TraceContext.TraceParent;
-
-        return httpContext;
-    }
-
-    private void SetHttpContextToIHttpContextAccessor(HttpContext httpContext)
-    {
-        if (httpContextAccessor is not null)
-            httpContextAccessor.HttpContext = httpContext;
     }
 
     private async Task WriteToReponse(HttpResponseData response,object value, HttpStatusCode statusCode)
