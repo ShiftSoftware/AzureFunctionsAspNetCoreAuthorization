@@ -130,7 +130,7 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                     
                     authorizationFilter.OnAuthorization(authorizationContext);
                     var result = authorizationContext.Result;
-                    
+
                     if (result is ForbidResult forbidResult)
                     {
                         await new StatusCodeResult(StatusCodes.Status403Forbidden).ExecuteResultAsync(new ActionContext
@@ -139,7 +139,7 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                         });
                         return;
                     }
-                    else
+                    else if (result is not null)
                     {
                         var objrctResult = result as ObjectResult;
                         var statusCodeResult = result as StatusCodeResult;
