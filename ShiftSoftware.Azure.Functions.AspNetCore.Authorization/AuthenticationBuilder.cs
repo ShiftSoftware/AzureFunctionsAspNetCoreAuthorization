@@ -24,8 +24,8 @@ public class AuthenticationBuilder
             context.FunctionDefinition.InputBindings.Any(binding => binding.Value.Type == "httpTrigger")
         );
 
-        builder.Services.AddScoped(x => new AuthorizationOptions(tokenValidationParameters, authenticationScheme));
-        builder.Services.AddScoped<TokenService>();
+        builder.Services.AddSingleton(x => new AuthorizationOptions(tokenValidationParameters, authenticationScheme));
+        builder.Services.AddSingleton<TokenService>();
 
         return this;
     }
