@@ -59,9 +59,9 @@ public class Tests
     {
         var testDirectory = Directory.GetCurrentDirectory();
 
-        var debugAzureFunctionSampleDirectory = testDirectory.Substring(0, testDirectory.IndexOf("Tests")) + "AzureFunctions.Sample/bin/Debug/net8.0";
+        var debugAzureFunctionSampleDirectory = testDirectory.Substring(0, testDirectory.IndexOf("Tests")) + "AzureFunctions.Sample/bin/Debug/net9.0";
 
-        var releaseAzureFunctionSampleDirectory = testDirectory.Substring(0, testDirectory.IndexOf("Tests")) + "AzureFunctions.Sample/bin/Release/net8.0";
+        var releaseAzureFunctionSampleDirectory = testDirectory.Substring(0, testDirectory.IndexOf("Tests")) + "AzureFunctions.Sample/bin/Release/net9.0";
 
         var azureFunctionSampleDirectory = "";
 
