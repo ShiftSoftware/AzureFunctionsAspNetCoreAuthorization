@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
-using System.Reflection.PortableExecutable;
 
 namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization;
 
@@ -24,8 +23,8 @@ public class AuthenticationBuilder
             context.FunctionDefinition.InputBindings.Any(binding => binding.Value.Type == "httpTrigger")
         );
 
-        builder.Services.AddSingleton(x => new AuthorizationOptions(tokenValidationParameters, authenticationScheme));
-        builder.Services.AddSingleton<TokenService>();
+        builder.Services.AddScoped(x => new AuthorizationOptions(tokenValidationParameters, authenticationScheme));
+        builder.Services.AddScoped<TokenService>();
 
         return this;
     }

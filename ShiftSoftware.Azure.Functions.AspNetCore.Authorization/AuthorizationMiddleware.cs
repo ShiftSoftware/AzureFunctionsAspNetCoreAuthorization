@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -9,8 +8,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Services;
 using ShiftSoftware.Azure.Functions.AspNetCore.Authorization.Utilities;
 using System.Net;
@@ -20,20 +19,14 @@ namespace ShiftSoftware.Azure.Functions.AspNetCore.Authorization;
 
 internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
-    private readonly TokenService tokenService;
     private readonly IHttpContextAccessor? httpContextAccessor;
-    private readonly IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>? authorizationOptions;
     private readonly IAuthorizationService? authorizationService;
 
     public AuthorizationMiddleware(
-        TokenService tokenService,
         IHttpContextAccessor? httpContextAccessor = null,
-        IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>? authorizationOptions = null,
         IAuthorizationService? authorizationService = null)
     {
-        this.tokenService = tokenService;
         this.httpContextAccessor = httpContextAccessor;
-        this.authorizationOptions = authorizationOptions;
         this.authorizationService = authorizationService;
     }
 
@@ -43,6 +36,12 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 
         if (httpContextAccessor is not null)
             httpContextAccessor.HttpContext = httpContext;
+
+        var serviceProvider = context.InstanceServices;
+
+        TokenService tokenService = serviceProvider.GetRequiredService<TokenService>();
+        IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>? authorizationOptions =
+            serviceProvider.GetRequiredService <IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>>();
 
         Dictionary<string, ClaimsPrincipal?> shcemeClaims = null;
         ClaimsPrincipal? claims = null;
@@ -105,7 +104,7 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                 var policies = ParsePolicies(authorizeAttribute.GetValueOrDefault().attribute?.Policy);
                 if (policies is not null)
                 {
-                    if (!UserIsHasPolicy(claims, policies))
+                    if (!UserIsHasPolicy(authorizationOptions, claims, policies))
                     {
                         await new StatusCodeResult(StatusCodes.Status403Forbidden).ExecuteResultAsync(new ActionContext
                         {
@@ -273,7 +272,10 @@ internal class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         return false;
     }
 
-    private bool UserIsHasPolicy(ClaimsPrincipal user, IEnumerable<string> policies)
+    private bool UserIsHasPolicy(
+        IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>? authorizationOptions, 
+        ClaimsPrincipal user, 
+        IEnumerable<string> policies)
     {
         if (authorizationOptions is null || authorizationService is null)
             return false;
