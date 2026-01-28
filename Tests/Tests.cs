@@ -1,12 +1,11 @@
 ﻿
 using System.Security.Claims;
 using System.Text;
-using Xunit.Abstractions;
 
 namespace Tests;
 
 [Collection("API Collection")]
-[TestCaseOrderer($"{(nameof(Tests))}.{(nameof(PriorityOrderer))}", nameof(Tests))]
+[TestCaseOrderer(typeof(PriorityOrderer))]
 public class Tests
 {
     private readonly HttpClient aspNetCoreClient;
@@ -34,11 +33,11 @@ public class Tests
             }
         };
 
-        var response = await aspNetCoreClient.PostAsync("login", new StringContent(System.Text.Json.JsonSerializer.Serialize(login), Encoding.UTF8, "application/json"));
+        var response = await aspNetCoreClient.PostAsync("login", new StringContent(System.Text.Json.JsonSerializer.Serialize(login), Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
 
-        Token = await response.Content.ReadAsStringAsync();
+        Token = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
     }
 
     [Fact(DisplayName = "02. Use the Token to call another AspNetCore endpoint")]
@@ -47,7 +46,7 @@ public class Tests
     {
         this.aspNetCoreClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
 
-        var response = await this.aspNetCoreClient.GetAsync("hello");
+        var response = await this.aspNetCoreClient.GetAsync("hello", TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
     }
@@ -75,11 +74,11 @@ public class Tests
         {
             var httpClient = new HttpClient();
 
-            var unauthenticatedResponse = await httpClient.GetAsync("http://localhost:7050/api/hello");
+            var unauthenticatedResponse = await httpClient.GetAsync("http://localhost:7050/api/hello", TestContext.Current.CancellationToken);
 
-            var unauthenticatedResponseOnClass = await httpClient.GetAsync("http://localhost:7050/api/authorized-on-class");
+            var unauthenticatedResponseOnClass = await httpClient.GetAsync("http://localhost:7050/api/authorized-on-class", TestContext.Current.CancellationToken);
 
-            var unauthenticatedAnonymousResponse = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous");
+            var unauthenticatedAnonymousResponse = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous", TestContext.Current.CancellationToken);
 
             Assert.Equal(401, (int)unauthenticatedResponse.StatusCode);
 
@@ -89,34 +88,34 @@ public class Tests
 
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Token}");
 
-            var authenticatedResponse = await httpClient.GetAsync("http://localhost:7050/api/hello");
+            var authenticatedResponse = await httpClient.GetAsync("http://localhost:7050/api/hello", TestContext.Current.CancellationToken);
 
-            var authenticatedResponseOnClass = await httpClient.GetAsync("http://localhost:7050/api/authorized-on-class");
+            var authenticatedResponseOnClass = await httpClient.GetAsync("http://localhost:7050/api/authorized-on-class", TestContext.Current.CancellationToken);
 
-            var authenticatedAnonymousResponse = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous");
+            var authenticatedAnonymousResponse = await httpClient.GetAsync("http://localhost:7050/api/allow-anonymous", TestContext.Current.CancellationToken);
 
             Assert.Equal(200, (int)authenticatedResponse.StatusCode);
             Assert.Equal(200, (int)authenticatedResponseOnClass.StatusCode);
             Assert.Equal(200, (int)authenticatedAnonymousResponse.StatusCode);
 
-            Assert.Equal("Hello", await authenticatedResponse.Content.ReadAsStringAsync());
-            Assert.Equal("Hello", await authenticatedResponseOnClass.Content.ReadAsStringAsync());
-            Assert.Equal("Hello", await authenticatedAnonymousResponse.Content.ReadAsStringAsync());
+            Assert.Equal("Hello", await authenticatedResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Equal("Hello", await authenticatedResponseOnClass.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Equal("Hello", await authenticatedAnonymousResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
-            var claimsResponse = await httpClient.GetAsync("http://localhost:7050/api/claims");
+            var claimsResponse = await httpClient.GetAsync("http://localhost:7050/api/claims", TestContext.Current.CancellationToken);
 
-            var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claimsResponse.Content.ReadAsStringAsync())!
+            var claimsDictionary_IActionResult = System.Text.Json.Nodes.JsonNode.Parse(await claimsResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))!
                 .AsObject().ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
 
             Assert.Equal("Admin", claimsDictionary_IActionResult[ClaimTypes.NameIdentifier]);
             Assert.Equal("Kurdistan", claimsDictionary_IActionResult[ClaimTypes.Country]);
             Assert.Equal("a@a.a", claimsDictionary_IActionResult[ClaimTypes.Email]);
 
-            var usaResident = await httpClient.GetAsync("http://localhost:7050/api/usa-resident");
+            var usaResident = await httpClient.GetAsync("http://localhost:7050/api/usa-resident", TestContext.Current.CancellationToken);
 
             Assert.Equal(403, (int)usaResident.StatusCode);
 
-            var kurdistan_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/kurdistan-resident");
+            var kurdistan_IActionResult = await httpClient.GetAsync("http://localhost:7050/api/kurdistan-resident", TestContext.Current.CancellationToken);
 
             Assert.Equal(200, (int)kurdistan_IActionResult.StatusCode);
         }
