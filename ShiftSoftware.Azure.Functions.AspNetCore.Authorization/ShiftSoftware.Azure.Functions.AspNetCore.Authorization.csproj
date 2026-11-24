@@ -15,12 +15,10 @@
 		<AssemblyName>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</AssemblyName>
 		<PackageId>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</PackageId>
 		<Title>ShiftSoftware.Azure.Functions.AspNetCore.Authorization</Title>
-		<Copyright>Copyright (c) Shift Software 2024</Copyright>
 		<PackageProjectUrl>https://shiftsoftware.github.io/AzureFunctionsAspNetCoreAuthorization/</PackageProjectUrl>
 		<RepositoryUrl>https://shiftsoftware.github.io/AzureFunctionsAspNetCoreAuthorization/</RepositoryUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
-		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
